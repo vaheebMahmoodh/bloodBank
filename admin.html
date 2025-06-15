@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Team 7kalari</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes gradientWave {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            background-size: 200% 200%;
+            animation: gradientWave 15s ease infinite;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .blood-badge {
+            background: rgba(220, 38, 38, 0.15);
+            color: #34d399;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="gradient-bg text-gray-100">
+    <!-- Login Page -->
+    <div id="loginPage" class="flex items-center justify-center min-h-screen">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-96 transform hover:scale-[1.02] transition-all">
+            <div class="text-center mb-8">
+                <i class="fas fa-user-shield text-4xl text-emerald-400 mb-4"></i>
+                <h2 class="text-2xl font-bold text-emerald-400">Admin Portal</h2>
+                <p class="text-gray-400 mt-2">Secure Access Required</p>
+            </div>
+            <input id="adminEmail" type="email" placeholder="Email" 
+                   class="w-full px-4 py-3 bg-gray-800 rounded-lg mb-4 focus:ring-2 focus:ring-emerald-400 outline-none">
+            <input id="adminPassword" type="password" placeholder="Password" 
+                   class="w-full px-4 py-3 bg-gray-800 rounded-lg mb-6 focus:ring-2 focus:ring-emerald-400 outline-none">
+            <button onclick="login()" 
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-semibold transition-all">
+                Authenticate
+            </button>
+            <button onclick="showAdminContact()" 
+                    class="w-full text-emerald-400 mt-4 underline hover:text-emerald-300 bg-transparent border-none flex items-center justify-center gap-2">
+                <i class="fas fa-user-plus"></i> Request Admin Access
+            </button>
+            <p id="loginError" class="text-red-400 mt-4 text-center hidden animate-pulse">Invalid Credentials</p>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="dashboard" class="hidden">
+        <!-- Navbar -->
+        <nav class="glass-panel p-4 flex flex-wrap md:flex-nowrap justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-emerald-400 flex items-center">
+                    <i class="fas fa-user-cog mr-2"></i>Admin Panel
+                </h1>
+                <div class="relative group">
+                    <button class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg transition-all"
+                            onclick="toggleNotificationDropdown()">
+                        <i class="fas fa-bell mr-2"></i>
+                        <span class="hidden sm:inline">Notifications</span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-64 glass-panel rounded-lg p-2 shadow-xl z-50">
+                        <button onclick="showNotificationModal('custom')" 
+                                class="w-full text-left p-3 hover:bg-gray-700 rounded-lg">
+                            <i class="fas fa-envelope mr-2"></i>Custom Message
+                        </button>
+                        <button onclick="showNotificationModal('all')" 
+                                class="w-full text-left p-3 hover:bg-gray-700 rounded-lg">
+                            <i class="fas fa-users mr-2"></i>All Donors
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Hamburger for mobile -->
+            <div class="md:hidden flex items-center ml-auto">
+                <button onclick="document.getElementById('navActions').classList.toggle('hidden')" class="text-emerald-400 focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+            <!-- Actions -->
+            <div id="navActions" class="w-full md:w-auto mt-4 md:mt-0 flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0 hidden md:flex">
+                <input type="text" id="searchUser" placeholder="Search Donor..." 
+                       class="px-4 py-2 bg-gray-800 rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none w-full md:w-auto"
+                       oninput="searchUsers()">
+                <button onclick="showAddDonorModal()" 
+                        class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg transition-all w-full md:w-auto">
+                    <i class="fas fa-plus mr-2"></i><span>Add Donor</span>
+                </button>
+                <button onclick="exportToExcel()" 
+                        class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white transition-all flex items-center gap-2 w-full md:w-auto">
+                    <i class="fas fa-file-export"></i>
+                    <span>Export</span>
+                </button>
+                <label class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg text-white transition-all flex items-center gap-2 cursor-pointer mb-0 w-full md:w-auto">
+                    <i class="fas fa-file-import"></i><span>Import</span>
+                    <input type="file" id="importExcel" accept=".xlsx, .xls" style="display:none" onchange="importFromExcel(event)">
+                </label>
+                <div class="relative delete-group">
+                    <button class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-all flex items-center gap-2 w-full md:w-auto"
+                            onclick="toggleDeleteDropdown(event)">
+                        <i class="fas fa-trash"></i><span>Delete</span>
+                    </button>
+                    <div id="deleteDropdown" class="hidden absolute right-0 mt-2 w-48 glass-panel rounded-lg p-2 shadow-xl z-50">
+                        <button onclick="showCustomDeleteModal()" 
+                                class="w-full text-left p-3 hover:bg-gray-700 rounded-lg">
+                            <i class="fas fa-list-check mr-2"></i>Custom Delete
+                        </button>
+                        <button onclick="confirmDeleteAll()" 
+                                class="w-full text-left p-3 hover:bg-gray-700 rounded-lg">
+                            <i class="fas fa-trash-alt mr-2"></i>Delete All
+                        </button>
+                    </div>
+                </div>
+                <button onclick="logout()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-white w-full md:w-auto">
+                    <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Donor List -->
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold text-emerald-400">Donor Management</h2>
+                <select id="bloodGroupFilter" onchange="filterByBloodGroup()" 
+                        class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg outline-none">
+                    <option value="all" selected>All Donors</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+            </div>
+            
+            <!-- Responsive Donor Table -->
+            <div class="glass-panel rounded-xl overflow-hidden">
+                <div class="overflow-x-auto w-full">
+                    <table class="min-w-[600px] w-full text-xs md:text-base">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th class="p-2 md:p-4 text-left whitespace-nowrap">Sl. No</th>
+                                <th class="p-2 md:p-4 text-left whitespace-nowrap">Donor</th>
+                                <th class="p-2 md:p-4 text-left whitespace-nowrap">Blood Type</th>
+                                <th class="p-2 md:p-4 text-left whitespace-nowrap">Age</th>
+                                <th class="p-2 md:p-4 text-left whitespace-nowrap">Contact</th>
+                                <th class="p-2 md:p-4 text-left whitespace-nowrap">Email</th>
+                                <th class="p-2 md:p-4 text-left whitespace-nowrap">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donorTable" class="divide-y divide-gray-700">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Donor Modal -->
+    <div id="addEditDonorModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-2xl w-[500px] transform transition-all">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-emerald-400"></h2>
+            <div class="space-y-4">
+                <input type="text" id="donorName" placeholder="Full Name" 
+                       class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                <select id="donorBloodType" 
+                        class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                    <option value="" disabled selected>Blood Type</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="donorAge" placeholder="Age" 
+                           class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                    <input type="text" id="donorContact" placeholder="Contact" 
+                           class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                </div>
+                <input type="email" id="donorEmail" placeholder="Email" 
+                       class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeAddEditDonorModal()" 
+                            class="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all">
+                        Cancel
+                    </button>
+                    <button id="saveDonorButton" onclick="saveDonor()" 
+                            class="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-all">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-2xl w-[600px] transform transition-all">
+            <h2 class="text-2xl font-bold mb-6 text-emerald-400 flex items-center">
+                <i class="fas fa-paper-plane mr-2"></i>Send Notification
+            </h2>
+            <div class="flex mb-4 border-b border-gray-700">
+                <button id="customTab" onclick="switchNotificationTab('custom')" 
+                        class="px-4 py-2 font-medium border-b-2 border-emerald-400">Custom</button>
+                <button id="allTab" onclick="switchNotificationTab('all')" 
+                        class="px-4 py-2 font-medium border-b-2 border-transparent">All Donors</button>
+            </div>
+            <div id="customForm" class="space-y-4">
+                <input type="email" id="recipientEmail" placeholder="Recipient Email" 
+                       class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                <input type="text" id="emailSubject" placeholder="Subject" 
+                       class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                <textarea id="emailMessage" rows="4" placeholder="Your message..." 
+                       class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400"></textarea>
+            </div>
+            <div id="allForm" class="hidden space-y-4">
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-emerald-400">Sending to all <span id="donorCount" class="font-bold">0</span> donors</p>
+                </div>
+                <input type="text" id="broadcastSubject" placeholder="Subject" 
+                       class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400">
+                <textarea id="broadcastMessage" rows="4" placeholder="Broadcast message..." 
+                       class="w-full px-4 py-3 bg-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400"></textarea>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeNotificationModal()" 
+                        class="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all">
+                    Cancel
+                </button>
+                <button onclick="sendNotification()" 
+                        class="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-all">
+                    <i class="fas fa-paper-plane mr-2"></i>Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Request Modal -->
+    <div id="adminRequestModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="glass-panel p-8 rounded-2xl w-96">
+            <h2 class="text-xl font-bold text-emerald-400 mb-4">Admin Request</h2>
+            <input id="requestUsername" type="text" placeholder="Username" 
+                   class="w-full px-4 py-3 bg-gray-800 rounded-lg mb-4 focus:ring-2 focus:ring-emerald-400 outline-none">
+            <input id="requestPassword" type="password" placeholder="Password" 
+                   class="w-full px-4 py-3 bg-gray-800 rounded-lg mb-6 focus:ring-2 focus:ring-emerald-400 outline-none">
+            <button onclick="submitAdminRequest()" 
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-semibold transition-all">
+                Submit Request
+            </button>
+            <button onclick="closeAdminRequestModal()" 
+                    class="w-full mt-2 text-gray-400 hover:text-gray-200 underline bg-transparent border-none">
+                Cancel
+            </button>
+            <p id="adminRequestMsg" class="text-center text-green-400 mt-4 hidden"></p>
+        </div>
+    </div>
+
+    <!-- Admin Contact Modal -->
+    <div id="adminContactModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="glass-panel p-8 rounded-2xl w-96 text-center">
+            <h2 class="text-xl font-bold text-emerald-400 mb-4">Request Admin Access</h2>
+            <p class="mb-6 text-gray-200">
+                Through this portal you can see all the donors, edit, delete, and add.<br>
+                To become an admin, please contact the support team.
+            </p>
+            <a href="https://wa.me/918943143060" target="_blank"
+               class="inline-flex items-center justify-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg gap-2 mb-4">
+                <i class="fab fa-whatsapp"></i> Contact Support (WhatsApp)
+            </a>
+            <br>
+            <button onclick="closeAdminContactModal()" 
+                    class="mt-2 px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-all">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Delete Modal -->
+    <div id="customDeleteModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="glass-panel p-8 rounded-2xl w-[500px] text-center">
+            <h2 class="text-xl font-bold text-red-400 mb-4">Custom Delete</h2>
+            <form id="customDeleteForm">
+                <div id="customDeleteList" class="max-h-64 overflow-y-auto text-left mb-4">
+                    <!-- Donor checkboxes will be injected here -->
+                </div>
+                <input type="email" id="customDeleteEmail" placeholder="Admin Email" class="w-full px-4 py-2 mb-2 rounded-lg bg-gray-800 text-white" required>
+                <input type="password" id="customDeletePassword" placeholder="Admin Password" class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-800 text-white" required>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeCustomDeleteModal()" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white">Delete Selected</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="importLoading" class="fixed inset-0 bg-black bg-opacity-40 z-[9999] hidden flex items-center justify-center">
+        <div style="background:#222; color:#fff; padding:2rem 3rem; border-radius:1rem; font-size:1.3rem; display:flex; flex-direction:column; align-items:center; gap:1rem; min-width:300px;">
+            <div style="width:100%; background:#444; border-radius:1rem; overflow:hidden; height:24px;">
+                <div id="importProgressBar" style="height:24px; width:0%; background:#4fd1c5; transition:width 0.3s;"></div>
+            </div>
+            <div id="importProgressText" style="margin-top:0.5rem;">Importing donors, please wait... 0%</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        // Authentication System
+        function login() {
+            const email = document.getElementById("adminEmail").value;
+            const password = document.getElementById("adminPassword").value;
+            let validEmail = "";
+            let validPassword = "";
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "login_credentials.php", false); // synchronous for login
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const creds = JSON.parse(xhr.responseText);
+                        validEmail = creds.email;
+                        validPassword = creds.password;
+                    } catch (e) {
+                        validEmail = "";
+                        validPassword = "";
+                    }
+                }
+            };
+            xhr.send();
+
+            if (email === validEmail && password === validPassword) {
+                localStorage.setItem("isAdminLoggedIn", "true");
+                document.getElementById("loginPage").classList.add("hidden");
+                document.getElementById("dashboard").classList.remove("hidden");
+                fetchDonors();
+            } else {
+                const errorElement = document.getElementById("loginError");
+                errorElement.classList.remove("hidden");
+                setTimeout(() => errorElement.classList.add("hidden"), 3000);
+            }
+        }
+
+        // Check login state on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem("isAdminLoggedIn") === "true") {
+                document.getElementById("loginPage").classList.add("hidden");
+                document.getElementById("dashboard").classList.remove("hidden");
+                fetchDonors();
+            }
+        });
+
+        // Donor Data Management
+        let donors = [];
+        let editingIndex = -1;
+
+        function fetchDonors() {
+            fetch('allDonors.php')
+            .then(response => response.json())
+            .then(data => {
+                donors = Array.isArray(data) ? data : [];
+                renderDonorTable(donors);
+                updateDonorCount();
+            })
+            .catch(error => {
+                donors = [];
+                renderDonorTable([]);
+                console.error('Error fetching donors:', error);
+            });
+        }
+
+        function renderDonorTable(data) {
+            const table = document.getElementById("donorTable");
+            table.innerHTML = data.map((donor, index) => `
+                <tr class="border-b border-gray-700 hover:bg-gray-800 transition-colors">
+                    <td class="p-4">${index + 1}</td>
+                    <td class="p-4">${donor.full_name}</td>
+                    <td class="p-4"><span class="blood-badge">${donor.blood_type}</span></td>
+                    <td class="p-4">${donor.age}</td>
+                    <td class="p-4">${donor.phone_number}</td>
+                    <td class="p-4">${donor.email || ""}</td>
+                    <td class="p-4 flex space-x-2">
+                        <button onclick="editDonor(${index})" class="text-blue-400 hover:text-blue-300" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <a href="tel:${donor.phone_number}" class="text-green-400 hover:text-green-300" title="Call">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <a href="https://wa.me/${donor.phone_number.replace(/[^0-9]/g, '')}" target="_blank" class="text-green-500 hover:text-green-400" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <button onclick="deleteDonorBackend('${donor.id}', ${index})" class="text-red-400 hover:text-red-300" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`
+            ).join('');
+        }
+
+        function showAddDonorModal() {
+            editingIndex = -1;
+            document.getElementById("modalTitle").textContent = "Add New Donor";
+            clearDonorForm();
+            document.getElementById("addEditDonorModal").classList.remove("hidden");
+        }
+
+        function editDonor(index) {
+            editingIndex = index;
+            const donor = donors[index];
+            document.getElementById("modalTitle").textContent = "Edit Donor";
+            document.getElementById("donorName").value = donor.full_name || "";
+            document.getElementById("donorBloodType").value = donor.blood_type || "";
+            document.getElementById("donorAge").value = donor.age || "";
+            document.getElementById("donorEmail").value = donor.email || "";
+            document.getElementById("donorContact").value = donor.phone_number || "";
+            document.getElementById("addEditDonorModal").classList.remove("hidden");
+        }
+
+        function saveDonor() {
+            const donor = {
+                id: editingIndex !== -1 ? donors[editingIndex].id : undefined,
+                full_name: document.getElementById("donorName").value,
+                blood_type: document.getElementById("donorBloodType").value,
+                age: document.getElementById("donorAge").value,
+                email: document.getElementById("donorEmail").value,
+                phone_number: document.getElementById("donorContact").value
+            };
+
+            if (!validateDonorForm(donor)) return;
+
+            if (editingIndex === -1) {
+                // Add new donor
+                const formData = new FormData();
+                formData.append('full_name', donor.full_name);
+                formData.append('blood_type', donor.blood_type);
+                formData.append('age', donor.age);
+                formData.append('email', donor.email);
+                formData.append('phone_number', donor.phone_number);
+
+                fetch('registerDonor.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(result => {
+                    if (result.trim() === "success") {
+                        fetchDonors(); // Refresh donor list
+                        closeAddEditDonorModal();
+                    } else {
+                        alert("Failed to add donor.");
+                    }
+                })
+                .catch(() => alert("Error adding donor."));
+            } else {
+                // Update donor in DB
+                fetch('editDonor.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(donor)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        donors[editingIndex] = donor;
+                        renderDonorTable(donors);
+                        closeAddEditDonorModal();
+                    } else {
+                        alert("Failed to update donor.");
+                    }
+                })
+                .catch(() => alert("Error updating donor."));
+            }
+        }
+
+        function validateDonorForm(donor) {
+            if (!donor.full_name || !donor.blood_type || !donor.age || !donor.phone_number) {
+                alert("Please fill all required fields.");
+                return false;
+            }
+            return true;
+        }
+
+        // Delete single donor (backend)
+        function deleteDonorBackend(donorId, index) {
+            const email = prompt("Enter admin email to confirm deletion:");
+            const password = prompt("Enter admin password to confirm deletion:");
+            if (email !== "vaheeb@vybix.in" || password !== "vah@123") {
+                alert("Invalid admin credentials. Deletion cancelled.");
+                return;
+            }
+            if (!confirm("Are you sure you want to delete this donor?")) return;
+
+            fetch('delete_donors.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: [donorId] })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    donors.splice(index, 1);
+                    renderDonorTable(donors);
+                    alert("Donor deleted.");
+                } else {
+                    alert("Failed to delete donor.");
+                }
+            })
+            .catch(() => {
+                alert("Error deleting donor.");
+            });
+        }
+
+        function closeAddEditDonorModal() {
+            document.getElementById("addEditDonorModal").classList.add("hidden");
+            clearDonorForm();
+        }
+
+        function clearDonorForm() {
+            document.getElementById("donorName").value = "";
+            document.getElementById("donorBloodType").value = "";
+            document.getElementById("donorAge").value = "";
+            document.getElementById("donorEmail").value = "";
+            document.getElementById("donorContact").value = "";
+        }
+
+        // Notification System
+        function toggleNotificationDropdown() {
+            document.getElementById("notificationDropdown").classList.toggle("hidden");
+        }
+
+        function showNotificationModal(type) {
+            document.getElementById("notificationModal").classList.remove("hidden");
+            switchNotificationTab(type);
+            document.getElementById("donorCount").textContent = donors.length;
+        }
+
+        function switchNotificationTab(type) {
+            document.getElementById("customForm").classList.toggle("hidden", type !== "custom");
+            document.getElementById("allForm").classList.toggle("hidden", type !== "all");
+            document.getElementById("customTab").classList.toggle("border-emerald-400", type === "custom");
+            document.getElementById("allTab").classList.toggle("border-emerald-400", type === "all");
+        }
+
+        function closeNotificationModal() {
+            document.getElementById("notificationModal").classList.add("hidden");
+        }
+
+        function sendNotification() {
+            alert("Notification sent successfully!");
+            closeNotificationModal();
+        }
+
+        // Admin Request
+        function showAdminRequestModal() {
+            document.getElementById("adminRequestModal").classList.remove("hidden");
+            document.getElementById("adminRequestMsg").classList.add("hidden");
+            document.getElementById("requestUsername").value = "";
+            document.getElementById("requestPassword").value = "";
+        }
+        function closeAdminRequestModal() {
+            document.getElementById("adminRequestModal").classList.add("hidden");
+        }
+        function submitAdminRequest() {
+            document.getElementById("adminRequestMsg").textContent =
+                "Your admin request is under review. You will get an email after successful registration.";
+            document.getElementById("adminRequestMsg").classList.remove("hidden");
+            setTimeout(closeAdminRequestModal, 3000);
+        }
+
+        // Search and Filter
+        function searchUsers() {
+            const query = document.getElementById("searchUser").value.toLowerCase();
+            const filtered = donors.filter(donor =>
+                (donor.full_name || "").toLowerCase().includes(query) ||
+                (donor.email || "").toLowerCase().includes(query) ||
+                (donor.phone_number || "").includes(query)
+            );
+            renderDonorTable(filtered);
+        }
+
+        function filterByBloodGroup() {
+            const bloodGroup = document.getElementById("bloodGroupFilter").value;
+            if (bloodGroup === "all") {
+                renderDonorTable(donors);
+            } else {
+                const filtered = donors.filter(donor => donor.blood_type === bloodGroup);
+                renderDonorTable(filtered);
+            }
+        }
+
+        // Admin Contact Modal
+        function showAdminContact() {
+            document.getElementById("adminContactModal").classList.remove("hidden");
+        }
+        function closeAdminContactModal() {
+            document.getElementById("adminContactModal").classList.add("hidden");
+        }
+
+        // Hide notification and delete dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.group')) {
+                document.getElementById("notificationDropdown").classList.add("hidden");
+            }
+            if (!e.target.closest('.delete-group')) {
+                document.getElementById("deleteDropdown").classList.add("hidden");
+            }
+        });
+
+        // Custom Delete Modal
+        function showCustomDeleteModal() {
+            document.getElementById("deleteDropdown").classList.add("hidden");
+            const list = document.getElementById("customDeleteList");
+            list.innerHTML = donors.map((donor, idx) => `
+                <label class="flex items-center mb-2">
+                    <input type="checkbox" class="mr-2" name="deleteDonor" value="${donor.id}">
+                    <span>${donor.full_name} (${donor.blood_type}, ${donor.phone_number})</span>
+                </label>
+            `).join('');
+            document.getElementById("customDeleteEmail").value = "";
+            document.getElementById("customDeletePassword").value = "";
+            document.getElementById("customDeleteModal").classList.remove("hidden");
+        }
+
+        function closeCustomDeleteModal() {
+            document.getElementById("customDeleteModal").classList.add("hidden");
+        }
+
+        // Handle custom delete form submit
+        document.getElementById("customDeleteForm").onsubmit = function(e) {
+            e.preventDefault();
+            const email = document.getElementById("customDeleteEmail").value.trim();
+            const password = document.getElementById("customDeletePassword").value.trim();
+            if (email !== "vaheeb@vybix.in" || password !== "vah@123") {
+                alert("Invalid admin credentials.");
+                return;
+            }
+            const checked = Array.from(document.querySelectorAll('input[name="deleteDonor"]:checked')).map(cb => cb.value);
+            if (checked.length === 0) {
+                alert("Please select at least one donor to delete.");
+                return;
+            }
+            fetch('delete_donors.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: checked })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    donors = donors.filter(d => !checked.includes(d.id));
+                    renderDonorTable(donors);
+                    closeCustomDeleteModal();
+                    alert("Selected donors deleted.");
+                } else {
+                    alert("Failed to delete selected donors.");
+                }
+            })
+            .catch(() => alert("Error deleting selected donors."));
+        };
+
+        // Delete All
+        function confirmDeleteAll() {
+            document.getElementById("deleteDropdown").classList.add("hidden");
+            const email = prompt("Enter admin email to confirm delete all:");
+            const password = prompt("Enter admin password to confirm delete all:");
+            if (email !== "vaheeb@vybix.in" || password !== "vah@123") {
+                alert("Invalid admin credentials.");
+                return;
+            }
+            if (confirm("Are you sure you want to delete ALL donors? This cannot be undone!")) {
+                fetch('delete_donors.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ delete_all: true })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        donors = [];
+                        renderDonorTable(donors);
+                        alert("All donors deleted.");
+                    } else {
+                        alert("Failed to delete all donors.");
+                    }
+                })
+                .catch(() => alert("Error deleting all donors."));
+            }
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            if (!window.XLSX) {
+                alert("Excel export library not loaded!");
+                return;
+            }
+            const exportData = donors.map(donor => ({
+                "Full Name": donor.full_name,
+                "Blood Type": donor.blood_type,
+                "Contact": donor.phone_number,
+                "Email": donor.email,
+                "Age": donor.age
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Donors");
+            XLSX.writeFile(wb, "donors.xlsx");
+        }
+
+        // Import from Excel
+        function importFromExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById("importLoading").classList.remove("hidden"); // Show loading
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const imported = XLSX.utils.sheet_to_json(worksheet);
+
+                let importedCount = 0;
+                let toImport = imported.filter(donor => donor["Email"] && donor["Email"].trim() !== "");
+                if (toImport.length === 0) {
+                    document.getElementById("importLoading").classList.add("hidden");
+                    alert("No valid data found in the Excel file (missing emails).");
+                    return;
+                }
+
+                const progressBar = document.getElementById("importProgressBar");
+                const progressText = document.getElementById("importProgressText");
+
+                function updateProgress() {
+                    const percent = Math.round((importedCount / toImport.length) * 100);
+                    progressBar.style.width = percent + "%";
+                    progressText.textContent = `Importing donors: ${importedCount + 1} of ${toImport.length} loading... (${percent}%)`;
+                }
+
+                function importNext(index) {
+                    if (index >= toImport.length) {
+                        setTimeout(() => {
+                            document.getElementById("importLoading").classList.add("hidden");
+                            fetchDonors();
+                            alert("Import completed!");
+                        }, 300);
+                        return;
+                    }
+                    const donor = toImport[index];
+                    const formData = new FormData();
+                    formData.append('full_name', donor["Full Name"] || "");
+                    formData.append('blood_type', donor["Blood Type"] || "");
+                    formData.append('age', donor["Age"] || "");
+                    formData.append('email', donor["Email"] || "");
+                    formData.append('phone_number', donor["Contact"] || "");
+                    fetch('registerDonor.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        // If duplicate phone, skip and continue
+                        if (result.includes("phone number already exists")) {
+                            // Optionally, you can log or count skipped entries here
+                        }
+                        importedCount++;
+                        updateProgress();
+                        setTimeout(() => importNext(index + 1), 100); // 100ms delay between requests
+                    })
+                    .catch(() => {
+                        importedCount++;
+                        updateProgress();
+                        setTimeout(() => importNext(index + 1), 100);
+                    });
+                }
+
+                updateProgress();
+                importNext(0);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem("isAdminLoggedIn");
+            document.getElementById("dashboard").classList.add("hidden");
+            document.getElementById("loginPage").classList.remove("hidden");
+        }
+
+        // Download Model Excel
+        function downloadModelExcel() {
+            // Create a worksheet with only headers
+            const ws = XLSX.utils.aoa_to_sheet([
+                ["Full Name", "Blood Type", "Contact", "Email", "Age"]
+            ]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Model");
+            XLSX.writeFile(wb, "donor_model.xlsx");
+        }
+
+        function toggleDeleteDropdown(event) {
+            event.stopPropagation();
+            document.getElementById("deleteDropdown").classList.toggle("hidden");
+        }
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.delete-group')) {
+                document.getElementById("deleteDropdown").classList.add("hidden");
+            }
+        });
+
+        function updateDonorCount() {
+            fetch('countDonor.php')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("donorCount").textContent = data.count || 0;
+                })
+                .catch(() => {
+                    document.getElementById("donorCount").textContent = 0;
+                });
+        }
+    </script>
+</body>
+</html>
