@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team 7kalari - Blood Donation Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes gradientWave {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #fee2e2, #ffd7d7, #fecaca);
+            background-size: 200% 200%;
+            animation: gradientWave 12s ease infinite;
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- Sticky Header -->
+    <header class="sticky-nav bg-white/80 backdrop-blur-md shadow-sm">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-red-600 flex items-center">
+                    <i class="fas fa-heartbeat mr-2"></i>Team 7kalari
+                </h1>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="text-gray-600 hover:text-red-600 transition-colors font-medium">Home</a>
+                    <a href="#search" class="text-gray-600 hover:text-red-600 transition-colors font-medium">Search</a>
+                    <a href="#donate" class="text-gray-600 hover:text-red-600 transition-colors font-medium">Donate</a>
+                    <a href="#users" class="text-gray-600 hover:text-red-600 transition-colors font-medium">Donors</a>
+                    <a href="#about" class="text-gray-600 hover:text-red-600 transition-colors font-medium">About</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-32 pb-48">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-6xl font-bold mb-8 text-gray-800 leading-tight">
+                    Donate Blood<br>
+                    <span class="text-red-600">Save Lives</span>
+                </h2>
+                <div class="bg-white/30 backdrop-blur-sm p-8 rounded-3xl shadow-xl inline-block mb-12">
+                    <div class="text-5xl font-bold text-red-600" id="donor-count">0</div>
+                    <p class="text-gray-600 mt-2">Registered Lifesavers</p>
+                </div>
+                <a href="#donate" class="inline-block bg-red-600 text-white px-12 py-5 rounded-2xl font-bold hover:bg-red-700 transition-all shadow-2xl hover:shadow-3xl transform hover:scale-105">
+                    Become a Donor <i class="fas fa-hand-holding-medical ml-3"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section id="search" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center mb-20">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Find Blood Donors</h2>
+                <p class="text-gray-600 text-lg">Search by blood type from our verified donor network</p>
+            </div>
+            <div class="max-w-xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-2xl">
+                <form class="space-y-6" onsubmit="searchDonors(event)">
+                    <div class="relative">
+                        <select id="search_blood_type" class="w-full px-6 py-4 text-lg rounded-xl border-2 border-red-100 bg-white appearance-none focus:border-red-500 focus:ring-2 focus:ring-red-200" required>
+                             <option value="">Select Blood Type</option>
+    <option>A+</option>
+    <option>A-</option>
+    <option>B+</option>
+    <option>B-</option>
+    <option>AB+</option>
+    <option>AB-</option>
+    <option>O+</option>
+    <option>O-</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-4 flex items-center">
+                            <i class="fas fa-chevron-down text-red-400"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-red-600 text-white py-4 rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg flex items-center justify-center gap-3">
+                        <i class="fas fa-search"></i> Search Now
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Donors Grid -->
+            <div id="donors-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-20 hidden">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Donation Form -->
+    <section id="donate" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto bg-white rounded-[2rem] shadow-2xl p-12">
+                <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Become a Blood Donor</h2>
+                <form class="space-y-8" onsubmit="return validateForm(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label class="block text-gray-700 mb-3 font-medium">Full Name</label>
+                            <input type="text" id="full_name" class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-3 font-medium">Email</label>
+                            <input type="email" id="email" class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-3 font-medium">Age</label>
+                            <input type="number" id="age" class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-3 font-medium">Blood Type</label>
+                            <select id="blood_type" class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200" required>
+                                <option value="">Select Blood Type</option>
+    <option>A+</option>
+    <option>A-</option>
+    <option>B+</option>
+    <option>B-</option>
+    <option>AB+</option>
+    <option>AB-</option>
+    <option>O+</option>
+    <option>O-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-3 font-medium">Phone Number</label>
+                            <input type="tel" id="phone_number" class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-3 font-medium">Last Donation Date</label>
+                            <input type="date" id="last_donation_date" class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-red-600 text-white py-5 rounded-xl font-bold hover:bg-red-700 transition-colors shadow-xl flex items-center justify-center gap-3">
+                        <i class="fas fa-heart-circle-plus"></i> Register Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Donors Section -->
+    <section id="users" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Recent Blood Donors</h2>
+                <p class="text-gray-600 text-lg">Our newest lifesaving heroes</p>
+            </div>
+            <div id="new-donors-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white/90 backdrop-blur-sm">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">About Team 7kalari</h2>
+                <p class="text-gray-600 text-lg max-w-2xl mx-auto">A passionate collective dedicated to revolutionizing blood donation through technology and community action</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-12">
+                <div class="p-8 bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
+                    <div class="w-20 h-20 bg-red-100 rounded-xl mb-6 flex items-center justify-center">
+                        <i class="fas fa-heart text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Our Mission</h3>
+                    <p class="text-gray-600">To create a reliable network connecting blood donors with those in need through innovative solutions</p>
+                </div>
+                <div class="p-8 bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
+                    <div class="w-20 h-20 bg-red-100 rounded-xl mb-6 flex items-center justify-center">
+                        <i class="fas fa-users text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Our Community</h3>
+                    <p class="text-gray-600" id="community-count-text">A growing family of <span id="community-donor-count">...</span> registered donors committed to saving lives</p>
+                    <script>
+                        fetch('countDonor.php')
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('community-donor-count').textContent = (data.count || 0).toLocaleString();
+                            })
+                            .catch(() => {
+                                document.getElementById('community-donor-count').textContent = '50,000+';
+                            });
+                    </script>
+                </div>
+                <div class="p-8 bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
+                    <div class="w-20 h-20 bg-red-100 rounded-xl mb-6 flex items-center justify-center">
+                        <i class="fas fa-hand-holding-heart text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Our Services</h3>
+                    <p class="text-gray-600">Blood donation drives, emergency response systems, and donor management solutions</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-16">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-red-400">Team 7kalari</h3>
+                    <p class="text-gray-400">Making blood donation accessible and efficient</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-red-400 transition-colors">Home</a></li>
+                        <li><a href="#search" class="text-gray-400 hover:text-red-400 transition-colors">Search Donors</a></li>
+                        <li><a href="#donate" class="text-gray-400 hover:text-red-400 transition-colors">Become Donor</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Contact</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><i class="fas fa-phone mr-2"></i> +91 9946863304</li>
+                        <li><i class="fas fa-envelope mr-2"></i> support@vybix.in</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Admin Portal</h4>
+                    <a href="admin.html" class="inline-block bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        Admin Login
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-12 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Team 7kalari. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="alertBox" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[99999] px-6 py-3 rounded-lg shadow-lg text-white text-center text-base font-semibold hidden"></div>
+
+    <script>
+        // Data Initialization
+        let donors = [];
+        fetch('searchDonors.php')
+            .then(response => response.json())
+            .then(data => {
+                donors = Array.isArray(data) ? data : [];
+                displayNewDonors();
+            })
+            .catch(() => {
+                donors = [];
+            });
+
+        let newDonors = [];
+        fetch('newDonors.php')
+            .then(response => response.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    // Show last 6 donors if more than 6, else show all
+                    newDonors = data.length > 6 ? data.slice(-6).reverse() : data.reverse();
+                } else {
+                    newDonors = [];
+                }
+                displayNewDonors();
+            })
+            .catch(() => {
+                newDonors = [];
+                displayNewDonors();
+            });
+
+        // Donor Counter Animation
+        let donorCount = 0;
+        fetch('countDonor.php')
+            .then(response => response.json())
+            .then(data => {
+                donorCount = data.count || 0;
+                animateCount(donorCount);
+            })
+            .catch(() => {
+                donorCount = 1568; // fallback value
+                animateCount(donorCount);
+            });
+
+        function animateCount(target) {
+            let current = 0;
+            const step = Math.max(1, Math.ceil(target / 100));
+            function updateCount() {
+                if (current < target) {
+                    current += step;
+                    if (current > target) current = target;
+                    document.getElementById('donor-count').textContent = current;
+                    requestAnimationFrame(updateCount);
+                } else {
+                    document.getElementById('donor-count').textContent = target;
+                }
+            }
+            updateCount();
+        }
+
+        // Form Validation
+        function validateForm(event) {
+            event.preventDefault();
+
+            const age = document.getElementById("age").value;
+            if (age < 18) {
+            showAlert("You must be at least 18 years old to donate blood.", "error");
+            return false;
+            }
+
+            const email = document.getElementById("email").value;
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+            showAlert("Please enter a valid email address.", "error");
+            return false;
+            }
+
+            // Prepare donor data
+            const newDonor = {
+            name: document.getElementById("full_name").value,
+            bloodType: document.getElementById("blood_type").value,
+            contact: document.getElementById("phone_number").value,
+            date: new Date().toISOString().split('T')[0]
+            };
+
+            // Save to backend
+            const formData = new FormData();
+            formData.append('full_name', document.getElementById("full_name").value);
+            formData.append('email', document.getElementById("email").value);
+            formData.append('age', document.getElementById("age").value);
+            formData.append('blood_type', document.getElementById("blood_type").value);
+            formData.append('phone_number', document.getElementById("phone_number").value);
+            formData.append('last_donation_date', document.getElementById("last_donation_date").value);
+
+            fetch('registerDonor.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                const text = await response.text();
+                if (text.trim().toLowerCase().includes("error")) {
+                    // Show a specific message for duplicate phone
+                    if (text.toLowerCase().includes("phone number already exists")) {
+                        showAlert("This phone number is already registered as a donor.", "error");
+                    } else {
+                        showAlert(text, "error");
+                    }
+                    throw new Error(text);
+                }
+                donors.push(newDonor);
+                newDonors.unshift(newDonor);
+                donorCount++;
+                animateCount(donorCount);
+                displayNewDonors();
+                showAlert("Thank you for registering as a donor!", "success");
+                document.querySelector('#donate form').reset();
+            })
+            .catch((err) => {
+                // Only show generic error if not already handled above
+                if (!err.message.toLowerCase().includes("already registered")) {
+                    showAlert("Failed to register donor. Please try again. " + (err.message || ""), "error");
+                }
+            });
+
+            return true;
+        }
+
+        // Show Alert
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 z-[99999] px-6 py-3 rounded-lg shadow-lg text-white text-center text-base font-semibold ${
+                type === 'error' ? 'bg-red-500' : 'bg-green-500'
+            }`;
+            alertBox.classList.remove('hidden');
+
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Display New Donors
+        function displayNewDonors() {
+            const container = document.getElementById("new-donors-list");
+            container.innerHTML = newDonors.map(donor => `
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div class="flex items-center mb-4 pb-4 border-b border-red-100">
+                        <div class="w-14 h-14 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center mr-4">
+                            <span class="text-red-600 font-bold text-xl">${donor.bloodType}</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">${donor.name}</h3>
+                            <p class="text-red-600 font-medium">Recently Registered</p>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-droplet text-red-400 mr-3"></i>
+                            Blood Type: <span class="font-bold ml-2">${donor.bloodType}</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-phone text-red-400 mr-3"></i>
+                            ${donor.contact}
+                        </div>  
+                        <div class="flex items-center text-gray-500 text-sm">
+                            <i class="fas fa-calendar-day text-red-400 mr-3"></i>
+                            <span class="font-semibold">Last Donated:</span> ${new Date(donor.date).toLocaleDateString('en-IN')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Search Donors
+        function searchDonors(event) {
+            event.preventDefault();
+            const bloodType = document.getElementById("search_blood_type").value;
+            const container = document.getElementById("donors-list");
+            container.innerHTML = '';
+
+            if (bloodType) {
+                fetch('searchDonors.php?blood_type=' + encodeURIComponent(bloodType))
+                    .then(response => response.json())
+                    .then(donors => {
+                        container.classList.remove('hidden');
+                        if (donors.length === 0) {
+                            container.innerHTML = `
+                                <div class="col-span-full text-center py-12">
+                                    <div class="text-red-500 text-6xl mb-4">
+                                        <i class="fas fa-heart-crack"></i>
+                                    </div>
+                                    <p class="text-gray-600 text-lg">No donors found for ${bloodType}</p>
+                                </div>
+                            `;
+                        } else {
+                            container.innerHTML = donors.map(donor => `
+                                <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-14 h-14 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center mr-4">
+                                            <span class="text-red-600 font-bold text-xl">${donor.bloodType}</span>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-xl font-bold text-gray-800">${donor.name}</h3>
+                                            <p class="text-red-600">Available Donor</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center text-gray-600">
+                                            <i class="fas fa-phone text-red-400 mr-3"></i>
+                                            ${donor.contact}
+                                        </div>
+                                        <div class="flex flex-col gap-3 mt-4">
+                                            <a 
+                                                href="tel:${donor.contact.replace(/\D/g, '')}" 
+                                                class="w-full bg-red-100 text-red-600 py-2 rounded-lg font-semibold hover:bg-red-200 transition-colors flex items-center justify-center"
+                                            >
+                                                <i class="fas fa-phone-alt mr-2"></i>Call Donor
+                                            </a>
+                                            <a 
+                                                href="https://wa.me/${donor.contact.replace(/\D/g, '')}" 
+                                                target="_blank"
+                                                class="w-full bg-green-100 text-green-700 py-2 rounded-lg font-semibold hover:bg-green-200 transition-colors flex items-center justify-center"
+                                            >
+                                                <i class="fab fa-whatsapp mr-2"></i>WhatsApp Donor
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    })
+                    .catch(() => {
+                        container.classList.remove('hidden');
+                        container.innerHTML = `<div class="col-span-full text-center py-12 text-red-500">Error fetching donors.</div>`;
+                    });
+            }
+        }
+
+        // Initial Setup
+        displayNewDonors();
+        function fetchDonors() {
+            fetch('searchDonors.php')
+                .then(response => response.json())
+                .then(data => {
+                    donors = Array.isArray(data) ? data : [];
+                    displayNewDonors();
+                })
+                .catch(() => {
+                    donors = [];
+                    displayNewDonors();
+                });
+        }
+    </script>
+</body>
+</html>
